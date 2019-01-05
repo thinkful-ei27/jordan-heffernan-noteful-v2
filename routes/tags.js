@@ -5,27 +5,26 @@ const knex = require('../knex');
 
 const router = express.Router();
 
-// Get All Folders (no search filter needed)
+// GET all tags
 
 router.get('/', (req, res, next) => {
   knex.select('id', 'name')
-    .from('folders')
+    .from('tags')
     .then(results => {
       res.json(results);
     })
-    .catch(err => next(err));
+    .catch*(err => next(err));
 });
 
-// Get Folder by id
+// GET tag by id
 
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
-  
-  knex
-    .select('id', 'name')
-    .from('folders')
-    .where('folders.id', id)
-    .orderBy('folders.id')
+
+  knex.select('id', 'name')
+    .from('tags')
+    .where('tags.id', id)
+    .orderBy('tags.id')
     .then(([results]) => {
       res.json(results);})
     .catch(err => {
@@ -33,23 +32,22 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-// Update Folder The noteful app does not use 
-//  this endpoint but we'll create it in order 
-// to round out our API
+
+//UPDATE tag
 
 router.put('/:id', (req, res, next) => {
   const id = req.params.id;
 
   const updateObj = {};
-  const updateableFields = ['name'];
+  const updatableFields = ['name'];
 
-  updateableFields.forEach(field => {
+  updatableFields.forEach(field => {
     if (field in req.body) {
       updateObj[field] = req.body[field];
     }
   });
 
-  if (!updateObj.name) {
+  if(!updateObj.name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
@@ -57,8 +55,8 @@ router.put('/:id', (req, res, next) => {
 
   knex
     .select('id', 'name')
-    .from('folders')
-    .where('folders.id', id)
+    .from('tags')
+    .where('tags.id', id)
     .update(updateObj, ['id', 'name'])
     .then(([item]) => {
       if (item) {
@@ -72,13 +70,10 @@ router.put('/:id', (req, res, next) => {
     });
 });
 
-// Create a Folder accepts an object with a name 
-// and inserts it in the DB. Returns the new 
-// item along the new id.
+//Create tag
 
 router.post('/', (req, res, next) => {
   const { name } = req.body;
-
   const newItem = { name };
 
   if (!newItem.name) {
@@ -88,26 +83,21 @@ router.post('/', (req, res, next) => {
   }
 
   knex
-    .into('folders')
+    .into('tags')
     .returning(['id', 'name'])
     .insert(newItem)
     .then(([results]) => res.json(results))
-    .catch(err => {
-      next(err);
-    });
+    .catch(err => next(err));
 });
 
-
-// Delete Folder By Id accepts an ID and deletes 
-// the folder from the DB and then returns a 
-//204 status.
+//Delete tag
 
 router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
 
   knex
-    .from('folders')
-    .where('folders.id', id)
+    .from('tags')
+    .where('tags.id', id)
     .del()
     .then(res.sendStatus(204))
     .catch(err => next(err));
